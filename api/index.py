@@ -171,9 +171,15 @@ def extract():
     if not video_url:
         return jsonify({'success': False, 'error': 'No URL provided'}), 400
 
+    # গুগল বট ও ৪MD৩ এরর বাইপাস করতে iOS এবং tv_embedded ক্লায়েন্ট ব্যবহার করা হয়েছে
     ydl_opts = {
         'format': 'best',
         'noplaylist': True,
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['ios', 'tv_embedded']
+            }
+        }
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
