@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template_string, jsonify
-import yt_dlp
+import urllib.request
+import json
 import os
 
 app = Flask(__name__)
@@ -171,28 +172,44 @@ def extract():
     if not video_url:
         return jsonify({'success': False, 'error': 'No URL provided'}), 400
 
-    # গুগল বট ও ৪MD৩ এরর বাইপাস করতে iOS এবং tv_embedded ক্লায়েন্ট ব্যবহার করা হয়েছে
-    ydl_opts = {
-        'format': 'best',
-        'noplaylist': True,
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['ios', 'tv_embedded']
-            }
-        }
-    }
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=False)
-            direct_url = info.get('url')
-            title = info.get('title')
-            return jsonify({
-                'success': True,
-                'title': title,
-                'download_url': direct_url
-            })
+        # কোবাল্ট এপিআই-এর জন্য ডেটা প্রস্তুত করা হচ্ছে
+        req_payload = json.dumps({
+            'url': video_url,
+            'vQuality': '720' # স্ট্যান্ডার্ড ৭২০পি কোয়ালিটি লিংক নেবে
+        }).encode('utf-8')
+        
+        # প্রক্সি এপিআই-এর কাছে রিকোয়েস্ট পাঠানো হচ্ছে
+        req = urllib.request.Request(
+            'https://api.cobalt.tools/api/json',
+            data=req_payload,
+            headers={
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0'
+            },
+            method='POST'
+        )
+        
+        with urllib.request.urlopen(req) as response:
+            res_data = json.loads(response.read().decode('utf-8'))
+            
+            if res_data.get('status') in ['stream', 'redirect', 'success'] and 'url' in res_data:
+                title = res_data.get('text', 'ভিডিও ডাউনলোড লিংক প্রস্তুত!')
+                # টাইটেলটি যদি বড় কোনো ইউআরএল হয়, তবে টেক্সট ডিফল্ট রাখা হচ্ছে
+                if len(title) > 100 or 'http' in title:
+                    title = 'ভিডিও ডাউনলোড লিংক প্রস্তুত!'
+                return jsonify({
+                    'success': True,
+                    'title': title,
+                    'download_url': res_data['url']
+                })
+            else:
+                error_msg = res_data.get('text', 'ইউটিউব সিকিউরিটি বাইপাস করা যায়নি!')
+                return jsonify({'success': False, 'error': error_msg})
+                
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        return jsonify({'success': False, 'error': 'ইউটিউব সিকিউরিটি বাইপাস করা যাচ্ছে না, অন্য ভিডিও চেষ্টা করুন।'})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
