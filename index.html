@@ -37,8 +37,8 @@
     </div>
 
     <script>
-        // আপনার Render API-এর আসল লিংকটি এখানে বসান (যেমন: https://my-video-api.onrender.com)
-        const BACKEND_URL = "https://YOUR-RENDER-API-URL.onrender.com"; 
+        // Render API URL
+        const BACKEND_URL = "https://my-yt-downloader-1af4.onrender.com"; 
 
         async function extractVideo() {
             const urlInput = document.getElementById('videoUrl').value.trim();
@@ -66,7 +66,7 @@
                     thumbnail.src = data.thumbnail;
                     title.innerText = data.title;
                     
-                    // প্রক্সি রাউটের মাধ্যমে অটোমেটিক ডাউনলোড ট্রিগার করা
+                    // প্রক্সি রাউটের মাধ্যমে সরাসরি ডাউনলোড
                     downloadBtn.href = `${BACKEND_URL}/api/download?url=${encodeURIComponent(data.url)}`;
                     
                     result.style.display = "block";
