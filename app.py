@@ -6,6 +6,12 @@ import yt_dlp
 app = Flask(__name__)
 CORS(app)
 
+# ব্রাউজারের মতো ফেক হেডার সেটআপ (ব্লক হওয়া এড়াতে)
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Accept-Language': 'en-US,en;q=0.9',
+}
+
 @app.route('/api/extract', methods=['GET'])
 def extract_video():
     url = request.args.get('url')
@@ -16,11 +22,19 @@ def extract_video():
         'format': 'best',
         'quiet': True,
         'no_warnings': True,
+        'user_agent': HEADERS['User-Agent'],
+        'http_headers': HEADERS,
+        'nocheckcertificate': True,
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+            
+            # যদি প্লেলিস্ট বা মাল্টিপল এন্ট্রি থাকে
+            if 'entries' in info:
+                info = info['entries'][0]
+
             return jsonify({
                 'title': info.get('title', 'Video'),
                 'thumbnail': info.get('thumbnail', ''),
@@ -36,7 +50,7 @@ def download_proxy():
         return "URL Missing", 400
 
     try:
-        r = requests.get(video_url, stream=True)
+        r = requests.get(video_url, stream=True, headers=HEADERS, timeout=30)
         return Response(
             r.iter_content(chunk_size=1024 * 1024),
             content_type=r.headers.get('content-type', 'video/mp4'),
