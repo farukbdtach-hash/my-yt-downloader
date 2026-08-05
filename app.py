@@ -6,7 +6,6 @@ import yt_dlp
 app = Flask(__name__)
 CORS(app)
 
-# ব্রাউজারের মতো ফেক হেডার সেটআপ (ব্লক হওয়া এড়াতে)
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
     'Accept-Language': 'en-US,en;q=0.9',
@@ -22,16 +21,21 @@ def extract_video():
         'format': 'best',
         'quiet': True,
         'no_warnings': True,
-        'user_agent': HEADERS['User-Agent'],
-        'http_headers': HEADERS,
         'nocheckcertificate': True,
+        'geo_bypass': True,
+        'http_headers': HEADERS,
+        # ইউটিউব এবং অন্যান্য সাইটের বট ডিটেকশন বাইপাস করার কনফিগারেশন
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android', 'ios', 'mweb']
+            }
+        }
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             
-            # যদি প্লেলিস্ট বা মাল্টিপল এন্ট্রি থাকে
             if 'entries' in info:
                 info = info['entries'][0]
 
