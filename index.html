@@ -25,7 +25,7 @@
 
             try {
                 // আমরা পরের ধাপে এখানে মূল সার্ভার লিংক বসাবো
-                const res = await fetch('YOUR_BACKEND_URL/api/extract', {
+                const res = await fetch('https://my-yt-downloader-1af4.onrender.com/api/extract', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: url })
