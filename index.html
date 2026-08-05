@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Free Video Downloader</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding: 40px; }
+        input { width: 70%; padding: 12px; font-size: 16px; border-radius: 5px; border: none; }
+        button { padding: 12px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #result { margin-top: 25px; }
+        a { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <h2>যেকোনো ভিডিও ডাউনলোডার</h2>
+    <input type="text" id="urlInput" placeholder="ভিডিও লিংক পেস্ট করুন...">
+    <button onclick="downloadVideo()">ডাউনলোড লিঙ্ক তৈরি করুন</button>
+    <div id="result"></div>
+
+    <script>
+        async function downloadVideo() {
+            const url = document.getElementById('urlInput').value;
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = "অপেক্ষা করুন, প্রসেসিং হচ্ছে...";
+
+            try {
+                // আমরা পরের ধাপে এখানে মূল সার্ভার লিংক বসাবো
+                const res = await fetch('YOUR_BACKEND_URL/api/extract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <h3>${data.title}</h3>
+                        <a href="${data.download_url}" target="_blank" download>ভিডিও সেভ করুন</a>
+                    `;
+                } else {
+                    resultDiv.innerHTML = "<p style='color:red;'>সমস্যা: " + data.message + "</p>";
+                }
+            } catch (err) {
+                resultDiv.innerHTML = "<p style='color:red;'>লিংক বের করা সম্ভব হয়নি।</p>";
+            }
+        }
+    </script>
+</body>
+</html>
