@@ -2,45 +2,79 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>Free Video Downloader</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>যেকোনো ভিডিও ডাউনলোডার</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding: 40px; }
-        input { width: 70%; padding: 12px; font-size: 16px; border-radius: 5px; border: none; }
-        button { padding: 12px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        #result { margin-top: 25px; }
-        a { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background-color: #121212; color: #ffffff; display: flex; justify-content: center; padding: 20px; }
+        .container { max-width: 600px; width: 100%; text-align: center; margin-top: 40px; }
+        h1 { margin-bottom: 20px; font-size: 24px; }
+        .input-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] { flex: 1; padding: 12px; border: 1px solid #333; border-radius: 6px; outline: none; font-size: 14px; }
+        button { padding: 12px 20px; background-color: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #218838; }
+        #result { margin-top: 20px; display: none; }
+        #thumbnail { width: 100%; max-width: 400px; border-radius: 8px; margin-bottom: 10px; }
+        #title { font-size: 16px; margin-bottom: 15px; }
+        .download-btn { display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
+        .download-btn:hover { background-color: #0056b3; }
+        #loading { display: none; margin-top: 15px; color: #ffc107; }
     </style>
 </head>
 <body>
-    <h2>যেকোনো ভিডিও ডাউনলোডার</h2>
-    <input type="text" id="urlInput" placeholder="ভিডিও লিংক পেস্ট করুন...">
-    <button onclick="downloadVideo()">ডাউনলোড লিঙ্ক তৈরি করুন</button>
-    <div id="result"></div>
+    <div class="container">
+        <h1>যেকোনো ভিডিও ডাউনলোডার</h1>
+        <div class="input-box">
+            <input type="text" id="videoUrl" placeholder="ভিডিওর লিংক এখানে পেস্ট করুন...">
+            <button onclick="extractVideo()">ডাউনলোড লিঙ্ক তৈরি করুন</button>
+        </div>
+        <div id="loading">ভিডিও প্রসেসিং হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</div>
+        <div id="result">
+            <img id="thumbnail" src="" alt="Thumbnail">
+            <p id="title"></p>
+            <a id="downloadBtn" class="download-btn" href="#" target="_blank">ভিডিও সেভ করুন</a>
+        </div>
+    </div>
 
     <script>
-        async function downloadVideo() {
-            const url = document.getElementById('urlInput').value;
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = "অপেক্ষা করুন, প্রসেসিং হচ্ছে...";
+        // আপনার Render API-এর আসল লিংকটি এখানে বসান (যেমন: https://my-video-api.onrender.com)
+        const BACKEND_URL = "https://YOUR-RENDER-API-URL.onrender.com"; 
+
+        async function extractVideo() {
+            const urlInput = document.getElementById('videoUrl').value.trim();
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const thumbnail = document.getElementById('thumbnail');
+            const title = document.getElementById('title');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            if (!urlInput) {
+                alert("অনুগ্রহ করে একটি ভিডিওর লিংক দিন!");
+                return;
+            }
+
+            loading.style.display = "block";
+            result.style.display = "none";
 
             try {
-                // আমরা পরের ধাপে এখানে মূল সার্ভার লিংক বসাবো
-                const res = await fetch('https://my-yt-downloader-1af4.onrender.com/api/extract', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: url })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    resultDiv.innerHTML = `
-                        <h3>${data.title}</h3>
-                        <a href="${data.download_url}" target="_blank" download>ভিডিও সেভ করুন</a>
-                    `;
+                const response = await fetch(`${BACKEND_URL}/api/extract?url=${encodeURIComponent(urlInput)}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert("এরর: " + data.error);
                 } else {
-                    resultDiv.innerHTML = "<p style='color:red;'>সমস্যা: " + data.message + "</p>";
+                    thumbnail.src = data.thumbnail;
+                    title.innerText = data.title;
+                    
+                    // প্রক্সি রাউটের মাধ্যমে অটোমেটিক ডাউনলোড ট্রিগার করা
+                    downloadBtn.href = `${BACKEND_URL}/api/download?url=${encodeURIComponent(data.url)}`;
+                    
+                    result.style.display = "block";
                 }
             } catch (err) {
-                resultDiv.innerHTML = "<p style='color:red;'>লিংক বের করা সম্ভব হয়নি।</p>";
+                alert("সার্ভারে সমস্যা হয়েছে, আবার চেষ্টা করুন।");
+            } finally {
+                loading.style.display = "none";
             }
         }
     </script>
