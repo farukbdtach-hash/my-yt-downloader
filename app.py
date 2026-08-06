@@ -8,7 +8,11 @@ CORS(app)
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.9',
+    'Sec-Ch-Ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+    'Sec-Ch-Ua-Mobile': '?0',
+    'Sec-Ch-Ua-Platform': '"Windows"',
 }
 
 @app.route('/api/extract', methods=['GET'])
@@ -17,11 +21,9 @@ def extract_video():
     if not url:
         return jsonify({'error': 'URL প্রয়োজন'}), 400
 
-    # ইউটিউবের লিংক হলে সরাসরি আটকে দিয়ে সুন্দর মেসেজ দেখাবে
     if "youtube.com" in url or "youtu.be" in url:
         return jsonify({'error': 'দুঃখিত, ইউটিউব বাদে অন্য যেকোনো সাইটের (Facebook, TikTok, Instagram ইত্যাদি) লিংক দিন।'}), 400
 
-    # অন্য যেকোনো সাইটের জন্য সাধারণ কনফিগারেশন
     ydl_opts = {
         'format': 'best',
         'quiet': True,
@@ -29,6 +31,9 @@ def extract_video():
         'nocheckcertificate': True,
         'geo_bypass': True,
         'http_headers': HEADERS,
+        
+        # টিকটকের জন্য ক্রোম ব্রাউজার নকল করার চেষ্টা করবে
+        'impersonate': 'chrome', 
     }
 
     try:
@@ -44,8 +49,7 @@ def extract_video():
                 'url': info.get('url', '')
             })
     except Exception as e:
-        # কোনো সমস্যা হলে তার সহজ বিবরণ দেখাবে
-        return jsonify({'error': f'ভিডিও লিংক তৈরি করা যায়নি। বিস্তারিত: {str(e)}'}), 500
+        return jsonify({'error': f'লিংক তৈরি করা যায়নি। বিস্তারিত: {str(e)}'}), 500
 
 @app.route('/api/download', methods=['GET'])
 def download_proxy():
