@@ -17,6 +17,11 @@ def extract_video():
     if not url:
         return jsonify({'error': 'URL প্রয়োজন'}), 400
 
+    # ইউটিউবের লিংক হলে সরাসরি আটকে দিয়ে সুন্দর মেসেজ দেখাবে
+    if "youtube.com" in url or "youtu.be" in url:
+        return jsonify({'error': 'দুঃখিত, ইউটিউব বাদে অন্য যেকোনো সাইটের (Facebook, TikTok, Instagram ইত্যাদি) লিংক দিন।'}), 400
+
+    # অন্য যেকোনো সাইটের জন্য সাধারণ কনফিগারেশন
     ydl_opts = {
         'format': 'best',
         'quiet': True,
@@ -24,12 +29,6 @@ def extract_video():
         'nocheckcertificate': True,
         'geo_bypass': True,
         'http_headers': HEADERS,
-        # ইউটিউব এবং অন্যান্য সাইটের বট ডিটেকশন বাইপাস করার কনফিগারেশন
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['android', 'ios', 'mweb']
-            }
-        }
     }
 
     try:
@@ -45,7 +44,8 @@ def extract_video():
                 'url': info.get('url', '')
             })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # কোনো সমস্যা হলে তার সহজ বিবরণ দেখাবে
+        return jsonify({'error': f'ভিডিও লিংক তৈরি করা যায়নি। বিস্তারিত: {str(e)}'}), 500
 
 @app.route('/api/download', methods=['GET'])
 def download_proxy():
