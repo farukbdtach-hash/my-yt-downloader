@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TakaNow - প্রিমিয়াম অনলাইন আর্নিং প্ল্যাটফর্ম</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    
+    <!-- Firebase SDK (Compat Version) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* সিএসএস ডার্ক ও লাইট মোড পরিবর্তনের ভেরিয়েবলস */
+        :root {
+            --bg-color: #0b0f19;
+            --text-color: #f8fafc;
+            --card-bg: #161f30;
+            --border-color: rgba(255, 255, 255, 0.04);
+            --header-bg: rgba(15, 23, 42, 0.8);
+            --text-muted: #94a3b8;
+            --input-bg: #0b0f19;
+            --primary-gradient: linear-gradient(135deg, #10b981, #059669);
+            --accent-glow: rgba(16, 185, 129, 0.25);
+        }
+        body.light-mode {
+            --bg-color: #f1f5f9;
+            --text-color: #0f172a;
+            --card-bg: #ffffff;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --header-bg: rgba(255, 255, 255, 0.95);
+            --text-muted: #64748b;
+            --input-bg: #e2e8f0;
+            --accent-glow: rgba(16, 185, 129, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-bottom: 140px; 
+        }
+        
+        /* প্রিমিয়াম হেডার */
+        header {
+            background: var(--header-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            color: var(--text-color);
+            padding: 14px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        header .logo {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-color);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+        }
+        header .logo img {
+            height: 28px;
+            vertical-align: middle;
+            margin-right: 8px;
+            border-radius: 4px;
+        }
+        header .logo span {
+            color: #10b981;
+        }
+        header .header-right i {
+            font-size: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 600px;
+            margin: 15px auto;
+        }
+
+        /* পেমেন্ট নোটিফিকেশন বার */
+        .live-payout-ticker {
+            background-color: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: #34d399;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .live-payout-ticker i {
+            animation: pulse 1.5s infinite;
+        }
+        .ticker-text {
+            display: inline-block;
+            animation: scroll-text 15s linear infinite;
+        }
+        @keyframes scroll-text {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        /* থ্রি-কলাম ব্যালেন্স কার্ড */
+        .balance-stats-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 18px 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .balance-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+        .balance-item h4 {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .balance-item .val {
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--text-color);
+            margin-top: 5px;
+        }
+        .balance-item.total .val {
+            color: #10b981;
+            font-size: 18px;
+        }
+        .balance-action-row {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        /* বিজ্ঞাপন ইউনিট স্পেস */
+        .ad-banner {
+            background-color: var(--card-bg);
+            border: 1px dashed var(--border-color);
+            padding: 12px;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 11px;
+            color: var(--text-muted);
+            overflow: hidden;
+        }
+
+        .sticky-bottom-ad {
+            position: fixed;
+            bottom: 75px; 
+            left: 0;
+            width: 100%;
+            background-color: var(--bg-color);
+            border-top: 1px solid var(--border-color);
+            padding: 5px;
+            text-align: center;
+            z-index: 999;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* আর্টিকেল কার্ড */
+        .article-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+        .article-thumb-container {
+            position: relative;
+            width: 100%;
+            height: 140px;
+        }
+        .article-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .article-views-badge {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #10b981;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .article-card-body {
+            padding: 15px;
+        }
+        .article-card-body h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-color);
+            line-height: 1.4;
+            margin-bottom: 5px;
+        }
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-muted);
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+        .article-card-body p {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .article-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+        }
+        .article-card-footer .reward {
+            font-size: 13px;
+            font-weight: bold;
+            color: #10b981;
+        }
+        .article-card-footer .read-btn {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px var(--accent-glow);
+        }
+        .article-card-footer .read-btn:disabled {
+            background: #475569;
+            cursor: not-allowed;
+        }
+
+        /* পেমেন্ট উইজেট */
+        .payout-item {
+            background-color: var(--input-bg);
+            padding: 10px 12px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .payout-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .payout-item-left i {
+            font-size: 16px;
+            color: #10b981;
+        }
+        .payout-item-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        .payout-item-time {
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+        .payout-item-right {
+            text-align: right;
+        }
+        .payout-item-amount {
+            font-size: 13px;
+            font-weight: bold;
+            color: #10b981;
+        }
+        .payout-item-status {
+            font-size: 10px;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        /* পপআপ মোডালস */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1150;
+            display: none;
+        }
+        .modal-overlay.active {
+            display: block;
+        }
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 90%;
+            max-width: 400px;
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 1200;
+            padding: 20px;
+            display: none;
+            opacity: 0;
+            transition: 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal.active {
+            display: block;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .modal-header h3 {
+            font-size: 15px;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* কার্ড ডেকোরেশন */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .card h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .card p {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .card .btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            font-size: 11px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* ইমেজ আপলোড গাইড বক্স */
+        .image-upload-guide {
+            background-color: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #f59e0b;
+        }
+        .image-upload-guide a {
+            color: #38bdf8;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
+        /* রেফারের কার্ড */
+        .referral-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .ref-input-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .ref-input {
+            flex: 1;
+            padding: 10px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+        }
+        .ref-copy-btn {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .share-btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .share-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+
+        /* গ্লোবাল ইনপুট এবং বাটন */
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            display: block;
+            margin-top: 6px;
+            appearance: none;
+            -webkit-appearance: none; 
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-premium {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px var(--accent-glow);
+            transition: all 0.3s ease;
+            appearance: none;
+            -webkit-appearance: none; 
+        }
+        .btn-premium:active {
+            transform: scale(0.97);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        /* থিম টগল */
+        .theme-toggle-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #10b981;
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        /* লিগ্যাল লিংক */
+        .legal-footer {
+            margin-top: 30px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+            text-align: center;
+        }
+        .legal-links {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .legal-links a {
+            color: var(--text-muted);
+            font-size: 11px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .legal-links a:hover {
+            color: #10b981;
+        }
+
+        /* আর্টিকেল ভিউ পেজ */
+        .article-view {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+        }
+        .article-view h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #10b981;
+            line-height: 1.4;
+        }
+        .article-content {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+        .timer-box {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ef4444;
+            margin: 15px 0;
+        }
+
+        /* ফুটার বার */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 11px;
+            flex: 1;
+            cursor: pointer;
+        }
+        .nav-item i {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        .nav-item.active {
+            color: #10b981;
+        }
+
+        /* Firebase Auth ওয়ান-পেজ ওভারলে */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px 20px;
+            width: 92%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .login-tabs {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .login-tab {
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .login-tab.active {
+            color: #10b981;
+            border-bottom: 2px solid #10b981;
+            padding-bottom: 8px;
+        }
+        .profile-section .avatar {
+            width: 60px;
+            height: 60px;
+            background-color: #1e293b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #10b981;
+            margin: 0 auto 15px auto;
+            overflow: hidden;
+            border: 2px solid #10b981;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= লগইন ও রেজিষ্ট্রেশন স্ক্রিন (Firebase Auth) ================= -->
+    <div id="auth-overlay" class="login-overlay">
+        <div class="login-card">
+            <h2 style="color: #10b981; font-weight: 800; margin-bottom: 10px;">Taka<span>Now</span></h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">লগইন অথবা নতুন অ্যাকাউন্ট তৈরি করুন</p>
+            
+            <div class="login-tabs">
+                <span id="tab-login" class="login-tab active" onclick="switchAuthTab('login')">লগইন</span>
+                <span id="tab-register" class="login-tab" onclick="switchAuthTab('register')">রেজিস্ট্রেশন</span>
+            </div>
+
+            <!-- লগইন ফর্ম -->
+            <form id="login-form" onsubmit="handleEmailLogin(event)">
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label style="font-size: 12px; color: var(--text-muted);">ইমেইল এড্রেস</label>
+                    <input type="email" id="login-email" placeholder="example@gmail.com" required style="width: 100%; padding: 12px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-color); margin-top: 5px; outline: none;">
+                </div>
+                <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                    <label style="font-size: 12px; color: var(--text-muted);">পাসওয়ার্ড</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required style="width: 100%; padding: 12px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-color); margin-top: 5px; outline: none;">
+                </div>
+                <button type="submit" class="btn-premium" style="margin-bottom: 15px;">লগইন করুন</button>
+            </form>
+
+            <!-- রেজিস্ট্রেশন ফর্ম -->
+            <form id="register-form" onsubmit="handleEmailRegister(event)" style="display: none;">
+                <div class="form-group" style="text-align: left; margin-bottom: 12px;">
+                    <label style="font-size: 12px; color: var(--text-muted);">আপনার নাম</label>
+                    <input type="text" id="reg-name" placeholder="যেমন: আরিক হাসান" required style="width: 100%; padding: 12px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-color); margin-top: 5px; outline: none;">
+                </div>
+                <div class="form-group" style="text-align: left; margin-bottom: 12px;">
+                    <label style="font-size: 12px; color: var(--text-muted);">ইমেইল এড্রেস</label>
+                    <input type="email" id="reg-email" placeholder="example@gmail.com" required style="width: 100%; padding: 12px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-color); margin-top: 5px; outline: none;">
+                </div>
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label style="font-size: 12px; color: var(--text-muted);">পাসওয়ার্ড (নূন্যতম ৬ অক্ষর)</label>
+                    <input type="password" id="reg-password" minlength="6" placeholder="••••••••" required style="width: 100%; padding: 12px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-color); margin-top: 5px; outline: none;">
+                </div>
+                <button type="submit" class="btn-premium" style="margin-bottom: 15px;">অ্যাকাউন্ট তৈরি করুন</button>
+            </form>
+
+            <div style="display: flex; align-items: center; justify-content: center; margin: 15px 0; color: var(--text-muted); font-size: 12px;">
+                <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+                <span style="padding: 0 10px;">অথবা</span>
+                <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+            </div>
+
+            <!-- গুগল সাইন ইন -->
+            <button class="btn-premium" style="background: linear-gradient(135deg, #ea4335, #c5221f); box-shadow: 0 5px 15px rgba(234, 67, 53, 0.3);" onclick="handleGoogleLogin()">
+                <i class="fa-brands fa-google" style="margin-right: 8px;"></i> Google দিয়ে লগইন
+            </button>
+        </div>
+    </div>
+
+    <!-- হেডার -->
+    <header id="main-header">
+        <div class="header-left">
+            <div class="logo">
+                <img src="logo.png" alt="" onerror="this.style.display='none';"> 
+                Taka<span>Now</span>
+            </div>
+        </div>
+        <div class="header-right" onclick="alert('আপনার কোনো নতুন নোটিফিকেশন নেই।')">
+            <i class="fa-regular fa-bell"></i>
+        </div>
+    </header>
+
+    <!-- Overlay -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeAllModals()"></div>
+
+    <!-- ১. লাকি স্পিন মোডাল -->
+    <div class="modal" id="modal-spin">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-spinner"></i> লাকি স্পিন চাকা</h3>
+            <button class="modal-close" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="text-align: center;">
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">আপনি ২৪ ঘন্টায় মাত্র ১ বার স্পিন খেলতে পারবেন।</p>
+            <div class="wheel-container">
+                <div class="wheel-pointer"></div>
+                <div class="wheel" id="spin-wheel"></div>
+            </div>
+            <button class="spin-btn" id="spin-start-btn" onclick="spinAndEarn()">স্পিন করুন</button>
+        </div>
+    </div>
+
+    <!-- ২. স্ক্র্যাচ কার্ড মোডাল -->
+    <div class="modal" id="modal-scratch">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-hand-sparkles"></i> লাকি স্ক্র্যাচ কার্ড</h3>
+            <button class="modal-close" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="text-align: center;">
+            <div class="scratch-card-box" style="background-color: var(--input-bg); border: 2px dashed #10b981; padding: 30px; border-radius: 15px; position: relative; margin: 15px 0;">
+                ৳ <span id="scratch-amount" style="font-size: 24px; font-weight: bold; color: #10b981;">0.00</span>
+                <div class="scratch-overlay" id="scratch-layer" onclick="scratchCard()" style="position: absolute; top:0; left:0; width:100%; height:100%; background: #1e293b; color: white; display:flex; align-items:center; justify-content:center; border-radius:13px; font-weight:bold; cursor:pointer; transition: opacity 0.3s;">ঘষুন (Scratch)</div>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 10px;">আঙুল ঘষে বোনাস অ্যামাউন্ট ক্লেইম করুন!</p>
+        </div>
+    </div>
+
+    <!-- ৩. ম্যাথ কুইজ মোডাল -->
+    <div class="modal" id="modal-quiz">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-brain"></i> ম্যাথ কুইজ সমাধান</h3>
+            <button class="modal-close" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="text-align: center;">
+            <p style="font-size: 12px; color: var(--text-muted);">সহজ উত্তর দিয়ে বোনাস লাভ করুন!</p>
+            <div class="quiz-box" id="quiz-question" style="font-size: 22px; font-weight: bold; margin: 15px 0; color: #10b981;">5 + 9 = ?</div>
+            <input type="number" id="quiz-answer" class="quiz-input" placeholder="উত্তর" style="width: 80%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; background: var(--input-bg); color: var(--text-color);">
+            <br><br>
+            <button class="btn-premium" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);" onclick="submitQuiz()">উত্তর সাবমিট</button>
+        </div>
+    </div>
+
+    <!-- ৪. লাইভ পেমেন্ট গ্যালারি মোডাল -->
+    <div class="modal" id="modal-payouts">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-money-bill-transfer"></i> লাইভ পেমেন্ট গ্যালারি</h3>
+            <button class="modal-close" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="live-payouts-list"></div>
+    </div>
+
+    <!-- ৫. উইথড্র মোডাল -->
+    <div class="modal" id="modal-withdraw">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-wallet"></i> টাকা উত্তোলন করুন</h3>
+            <button class="modal-close" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="withdraw-form" onsubmit="handleWithdraw(event)">
+            <div class="form-group">
+                <label>পেমেন্ট মেথড</label>
+                <select id="withdraw-method" required>
+                    <option value="Bkash">বিকাশ (Personal)</option>
+                    <option value="Nagad">নগদ (Personal)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>বিকাশ/নগদ নম্বর</label>
+                <input type="number" id="withdraw-number" placeholder="017XXXXXXXX" required>
+            </div>
+            <div class="form-group">
+                <label>টাকার পরিমাণ (নূন্যতম ১০০ টাকা)</label>
+                <input type="number" id="withdraw-amount" min="100" placeholder="যেমন: ১৫০" required>
+            </div>
+            <br>
+            <button type="submit" class="btn-premium btn-danger">উইথড্র রিকোয়েস্ট পাঠান</button>
+        </form>
+    </div>
+
+    <!-- ৬. গুগল এডসেন্স লিগ্যাল পেইজ মোডালস -->
+    <div class="modal" id="modal-legal-tos">
+        <div class="modal-header">
+            <h3>Terms of Service</h3>
+            <button class="modal-close" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6; text-align: justify;">
+            <p>Welcome to TakaNow. By accessing and using our website, you agree to comply with and be bound by the following terms and conditions. Any fraudulent activities or automation scripts to bypass tasks will result in immediate suspension of account privileges and forfeiture of balances.</p>
+        </div>
+    </div>
+    <div class="modal" id="modal-legal-privacy">
+        <div class="modal-header">
+            <h3>Privacy Policy</h3>
+            <button class="modal-close" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6; text-align: justify;">
+            <p>At TakaNow, we value and respect your privacy. Browser storage and Firebase Realtime Database are used securely solely to store your earnings progress, daily bonuses, and transaction history.</p>
+        </div>
+    </div>
+    <div class="modal" id="modal-legal-about">
+        <div class="modal-header">
+            <h3>About Us</h3>
+            <button class="modal-close" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6; text-align: justify;">
+            <p>TakaNow is a premier online microtask reward directory designed to help users earn supplementary pocket money by completing simple tasks, reading informative tech articles, and participating in fun interactive daily games.</p>
+        </div>
+    </div>
+    <div class="modal" id="modal-legal-contact">
+        <div class="modal-header">
+            <h3>Contact Us</h3>
+            <button class="modal-close" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+            <p>If you have any questions, feedback, or support inquiries regarding your payments, tasks, or partnership opportunities, feel free to reach out to our official support channel:</p>
+            <p style="margin-top: 10px; font-weight: bold; color: #10b981;">Email: support@takanow.free.je</p>
+            <p style="margin-top: 5px; font-weight: bold; color: #38bdf8;">Telegram Support: @TakaNow_Support</p>
+        </div>
+    </div>
+
+    <!-- ৭. ডাইনামিক বিজ্ঞাপন দেখার টাইমার মোডাল (AdMob API Fallback) -->
+    <div class="modal" id="modal-watch-ad">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-video"></i> বিজ্ঞাপন লোড হচ্ছে...</h3>
+            <button class="modal-close" onclick="closeAllModals()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="text-align: center; padding: 10px;">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">বিজ্ঞাপনটি সম্পূর্ণ দেখলে আপনার ব্যালেন্সে ৳ ২.০০ টাকা যোগ হবে।</p>
+            
+            <div style="margin: 15px 0;">
+                [AdMob SDK video playing in background...]
+            </div>
+
+            <div class="timer-box" id="ad-timer">অপেক্ষা করুন: ১৫ সেকেন্ড</div>
+            <button class="btn-premium" id="claim-ad-reward-btn" style="display: none; background: linear-gradient(135deg, #10b981, #059669);" onclick="claimAdReward()">৳ ২.০০ দাবি করুন</button>
+        </div>
+    </div>
+
+    <!-- মূল কন্টেইনার -->
+    <div class="container">
+
+        <!-- লাইভ পেমেন্ট প্রুফ নোটিফিকেশন বার -->
+        <div class="live-payout-ticker">
+            <i class="fa-solid fa-circle-check"></i>
+            <span class="ticker-text" id="payout-ticker">পেমেন্ট আপডেট লোড হচ্ছে...</span>
+        </div>
+
+        <!-- ================= হোম ট্যাব কন্টেন্ট (আর্টিকেল ফিড) ================= -->
+        <div id="home-tab" class="tab-content active">
+            <h3 style="margin-bottom: 12px; font-size: 15px;" id="news-feed-heading"><i class="fa-solid fa-newspaper"></i> থাম্বনেইলসহ নতুন নতুন আর্টিকেল</h3>
+            <p id="article-desc" style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">পুরস্কার: ৳ ৩.০০ | আজ পড়েছেন: ০/১০ বার</p>
+            
+            <div id="articles-feed"></div>
+        </div>
+
+        <!-- ================= আর্টিকেল রিডিং পেজ (গোপন এডসেন্স ভিউ পেজ - ডাইনামিক) ================= -->
+        <div id="article-section" class="article-view">
+            <h2 id="article-title">লোড হচ্ছে...</h2>
+            
+            <div style="margin: 15px 0; text-align: center;">
+                [Sponsor Ad Content Placeholder]
+            </div>
+
+            <div class="article-content" id="article-body">
+                লোড হচ্ছে...
+            </div>
+
+            <div style="margin: 15px 0; text-align: center;">
+                [Sponsor Banner Placeholder]
+            </div>
+
+            <center>
+                <div class="timer-box" id="article-timer">অপেক্ষা করুন: ৩০ সেকেন্ড</div>
+                <button class="submit-btn" id="claim-article-btn" style="display: none; background: linear-gradient(135deg, #10b981, #059669); padding: 12px 25px; border-radius: 8px; border:none; font-weight:bold; color:white; cursor:pointer;" onclick="claimArticleReward()">৳ ৩.০০ দাবি করুন</button>
+            </center>
+        </div>
+
+        <!-- ================= আর্নিং ট্যাব কন্টেন্ট ================= -->
+        <div id="earning-tab" class="tab-content">
+            <div class="referral-card">
+                <i class="fa-solid fa-people-group" style="font-size: 40px; color: #10b981; margin-bottom: 10px;"></i>
+                <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">বন্ধুদের আমন্ত্রণ জানিয়ে আয় করুন</h3>
+                <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">আপনার রেফার লিংকের মাধ্যমে বন্ধুদের জয়েন করিয়ে প্রতি রেফারে ১০% কমিশন আজীবন উপভোগ করুন।</p>
+                
+                <div class="ref-input-group">
+                    <input type="text" id="referral-link-input" class="ref-input" readonly value="https://takanow.free.je/?ref=TakaNow_User">
+                    <button class="ref-copy-btn" onclick="copyReferralLink()">কপি করুন</button>
+                </div>
+                
+                <div class="share-btn-group">
+                    <a href="#" id="share-whatsapp-btn" target="_blank" class="share-btn" style="background-color: #25d366;">
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                    </a>
+                    <a href="#" id="share-telegram-btn" target="_blank" class="share-btn" style="background-color: #0088cc;">
+                        <i class="fa-brands fa-telegram"></i> Telegram
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= ক্রিয়েট ট্যাব কন্টেন্ট ================= -->
+        <div id="create-tab" class="tab-content">
+            <div class="image-upload-guide">
+                <i class="fa-solid fa-image" style="font-size: 16px; margin-right: 5px;"></i>
+                <strong>ছবি আপলোড গাইড:</strong> আপনার আর্টিকেলের জন্য থাম্বনেইল ছবি তৈরি করে <a href="https://uploadimgur.com/" target="_blank">uploadimgur.com</a> ওয়েবসাইট থেকে আপলোড করুন। তারপর সেখান থেকে ছবির লিংকটি কপি করে এনে নিচের থাম্বনেইল বক্সে পেস্ট করুন।
+            </div>
+
+            <div class="profile-section" style="text-align: left; margin-bottom: 15px;" id="submission-limit-info">
+                <h3 style="margin-bottom: 5px; color:#10b981;"><i class="fa-solid fa-pen-fancy"></i> আর্টিকেল লিখে আয় করুন</h3>
+                <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">প্রতিটি আর্টিকেল সাবমিট করার জন্য আপনি পাবেন **৳ ৫.০০** সরাসরি বোনাস। আপনি সর্বোচ্চ ২টি আর্টিকেল লিখতে পারবেন।</p>
+            </div>
+            
+            <form id="article-submit-form" onsubmit="handleArticleSubmission(event)">
+                <div class="form-group">
+                    <label>আর্টিকেলের শিরোনাম (Title)</label>
+                    <input type="text" id="user-art-title" placeholder="যেমন: অনলাইন থেকে টাকা তোলার সঠিক উপায়" required>
+                </div>
+                <div class="form-group">
+                    <label>থাম্বনেইল ইমেজ ইউআরএল (Thumbnail Image URL)</label>
+                    <input type="text" id="user-art-thumb" placeholder="https://i.imgur.com/your_image.jpg" required>
+                </div>
+                <div class="form-group">
+                    <label>আর্টিকেলের মূল বিষয়বস্তু (Content)</label>
+                    <textarea id="user-art-body" rows="6" placeholder="এখানে আপনার আর্টিকেলের বিস্তারিত তথ্য লিখুন..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); background-color: var(--input-bg); color: var(--text-color); resize: vertical; outline: none; font-size: 14px;" required></textarea>
+                </div>
+                <br>
+                <button type="submit" class="btn-premium" style="background: var(--primary-gradient);">আর্টিকেল সাবমিট করুন (পাবলিশ)</button>
+            </form>
+        </div>
+
+        <!-- ================= বিজ্ঞাপন (Ads) ট্যাব কন্টেন্ট ================= -->
+        <div id="ads-tab" class="tab-content">
+            <div class="profile-section" style="text-align: left; margin-bottom: 15px;">
+                <h3 style="margin-bottom: 5px; color:#10b981;"><i class="fa-solid fa-rectangle-ad"></i> বিজ্ঞাপন দেখে আয় করুন</h3>
+                <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">প্রতিটি ভিডিও/ব্যানার বিজ্ঞাপন সম্পূর্ণ দেখার জন্য আপনার ব্যালেন্সে সরাসরি <strong>৳ ২.০০</strong> টাকা করে যোগ হবে।</p>
+            </div>
+
+            <div class="card" style="border-left-color: #3b82f6;">
+                <div class="card-info">
+                    <h4>১. হাই-সিপিএম ভিডিও বিজ্ঞাপন</h4>
+                    <p>পুরস্কার: ৳ ২.০০ | সময়: ১৫ সেকেন্ড</p>
+                </div>
+                <div class="card-action">
+                    <button class="btn" style="background-color: #3b82f6;" onclick="watchAdTask('ভিডিও বিজ্ঞাপন ১')">বিজ্ঞাপন দেখুন</button>
+                </div>
+            </div>
+
+            <div class="card" style="border-left-color: #f59e0b;">
+                <div class="card-info">
+                    <h4>২. প্রফেশনাল স্পন্সরড বিজ্ঞাপন</h4>
+                    <p>পুরস্কার: ৳ ২.০০ | সময়: ১৫ সেকেন্ড</p>
+                </div>
+                <div class="card-action">
+                    <button class="btn" style="background-color: #f59e0b;" onclick="watchAdTask('স্পন্সরড বিজ্ঞাপন ২')">বিজ্ঞাপন দেখুন</button>
+                </div>
+            </div>
+
+            <div class="card" style="border-left-color: #e2125d;">
+                <div class="card-info">
+                    <h4>৩. ফাস্ট-লোডিং ব্যানার বিজ্ঞাপন</h4>
+                    <p>পুরস্কার: ৳ ২.০০ | সময়: ১৫ সেকেন্ড</p>
+                </div>
+                <div class="card-action">
+                    <button class="btn" style="background-color: #e2125d;" onclick="watchAdTask('ব্যানার বিজ্ঞাপন ৩')">বিজ্ঞাপন দেখুন</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= প্রোফাইল ও উইথড্র ট্যাব কন্টেন্ট ================= -->
+        <div id="profile-tab" class="tab-content">
+            <div class="profile-section">
+                <div class="avatar" id="user-avatar-box">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="profile-info" style="margin-bottom: 20px; text-align: center;">
+                    <h3 id="profile-user-name">টেস্ট ইউজার</h3>
+                    <p id="profile-user-email" style="color: var(--text-muted); font-size: 13px; margin-top: 3px;">testuser@gmail.com</p>
+                    <p style="margin-top: 8px;">মেম্বারশিপ: <span style="color:#10b981; font-weight:bold;">Premium Member</span></p>
+                </div>
+
+                <div class="balance-stats-card">
+                    <div class="balance-grid">
+                        <div class="balance-item">
+                            <h4>আজকের আয়</h4>
+                            <div class="val">৳ <span id="balance-today">0.00</span></div>
+                        </div>
+                        <div class="balance-item" style="border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color);">
+                            <h4>গতকালের আয়</h4>
+                            <div class="val">৳ <span id="balance-yesterday">0.00</span></div>
+                        </div>
+                        <div class="balance-item total">
+                            <h4>মোট ব্যালেন্স</h4>
+                            <div class="val">৳ <span id="user-balance">0.00</span></div>
+                        </div>
+                    </div>
+                    <div class="balance-action-row">
+                        <button class="btn-premium" style="width: auto; padding: 10px 20px; font-size: 13px;" onclick="openFeatureModal('modal-withdraw')"><i class="fa-solid fa-wallet"></i> উত্তোলন করুন (Withdraw)</button>
+                    </div>
+                </div>
+
+                <div class="theme-toggle-container">
+                    <span><i class="fa-solid fa-moon"></i> ডার্ক মোড (Dark Mode)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle-checkbox" onchange="toggleTheme()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <button class="btn-premium btn-warning" onclick="openFeatureModal('modal-payouts')"><i class="fa-solid fa-money-bill-transfer"></i> সবার মোট উত্তোলন প্রুফ</button>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <button class="btn-premium btn-danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> লগআউট করুন (Logout)</button>
+                </div>
+                
+                <div class="withdraw-section" style="margin-top: 25px; margin-bottom: 15px;">
+                    <h4 style="margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">আমার উত্তোলন হিস্টোরি</h4>
+                    <div id="my-withdrawals-history"></div>
+                </div>
+
+                <div style="margin-top: 25px; text-align: center;">
+                    <a href="#" onclick="resetDemoData()" style="color: #64748b; font-size: 14px; text-decoration: none; font-weight: bold;"><i class="fa-solid fa-rotate-left"></i> টেস্ট ডাটা রিসেট করুন (Reset)</a>
+                </div>
+            </div>
+
+            <div class="legal-footer">
+                <div class="legal-links">
+                    <a href="#" onclick="openFeatureModal('modal-legal-tos')">Terms of Service</a>
+                    <a href="#" onclick="openFeatureModal('modal-legal-privacy')">Privacy Policy</a>
+                    <a href="#" onclick="openFeatureModal('modal-legal-about')">About Us</a>
+                    <a href="#" onclick="openFeatureModal('modal-legal-contact')">Contact Us</a>
+                </div>
+                <p style="font-size: 9px; color: var(--text-muted); margin-top: 10px;">&copy; 2026 TakaNow. All Rights Reserved.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- স্টিকি বাটন স্পেস -->
+    <div class="sticky-bottom-ad">
+        [AdMob Banner Placeholder]
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" data-tab="home-tab" onclick="switchTab(this, 'TakaNow - হোম')">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </div>
+        <div class="nav-item" data-tab="earning-tab" onclick="switchTab(this, 'আর্নিং - রেফারেল')">
+            <i class="fa-solid fa-money-bill-trend-up"></i>
+            <span>Earning</span>
+        </div>
+        <div class="nav-item" data-tab="create-tab" onclick="switchTab(this, 'আর্টিকেল লিখুন এবং ৫ টাকা বোনাস নিন')">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>Create</span>
+        </div>
+        <div class="nav-item" data-tab="ads-tab" onclick="switchTab(this, 'বিজ্ঞাপন দেখে আয় করুন')">
+            <i class="fa-solid fa-rectangle-ad"></i>
+            <span>Ads</span>
+        </div>
+        <div class="nav-item" data-tab="profile-tab" onclick="switchTab(this, 'আমার প্রোফাইল')">
+            <i class="fa-solid fa-user"></i>
+            <span>Profile</span>
+        </div>
+    </div>
+
+    <!-- ================= জাভাস্ক্রিপ্ট লজিক ================= -->
+    <script>
+        // ================= ১. REAL FIREBASE CONFIGURATION INTEGRATED =================
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8KUCgdV5kdh3FH3KpydR-sydi5KPh2QI",
+            authDomain: "miniyou-4b62e.firebaseapp.com",
+            databaseURL: "https://miniyou-4b62e-default-rtdb.firebaseio.com",
+            projectId: "miniyou-4b62e",
+            storageBucket: "miniyou-4b62e.firebasestorage.app",
+            messagingSenderId: "439900714792",
+            appId: "1:439900714792:web:c723b93bc3e1cd3164421d",
+            measurementId: "G-QQ7QN9XTEH"
+        };
+
+        // Firebase Initialize
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // লোকাল স্টেট ভেরিয়েবলস
+        let balance = 0.00;
+        let todayEarnings = 0.00;
+        let yesterdayEarnings = 0.00;
+        let lastBonusClaim = 0;
+        let articleCount = 0;
+        let articleBlockedUntil = 0;
+        let userSubmissions = 0;
+        let lastSpinTime = 0;
+
+        let isScratched = false;
+        let isSpinning = false;
+        let bonusTimerInterval = null;
+        let articleTimerInterval = null;
+        let articleStatusInterval = null;
+        let spinTimerInterval = null;
+        let adTimerInterval = null;
+        let currentNum1, currentNum2, correctAnswer;
+        let currentWatchingAdName = "";
+
+        // সেশন ম্যানেজমেন্ট ট্র্যাকার
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('auth-overlay').style.display = 'none';
+                
+                document.getElementById('profile-user-name').innerText = user.displayName || "ইউজার";
+                document.getElementById('profile-user-email').innerText = user.email;
+                if(user.photoURL) {
+                    document.getElementById('user-avatar-box').innerHTML = `<img src="${user.photoURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                }
+
+                const referralLink = `https://takanow.free.je/?ref=${user.uid}`;
+                document.getElementById('referral-link-input').value = referralLink;
+                document.getElementById('share-whatsapp-btn').href = `https://api.whatsapp.com/send?text=TakaNow-এ জয়েন করে ফ্রিতে অনলাইন থেকে ইনকাম করুন! লিংক: ${referralLink}`;
+                document.getElementById('share-telegram-btn').href = `https://t.me/share/url?url=${referralLink}&text=TakaNow-এ জয়েন করে ফ্রিতে ইনকাম করুন!`;
+
+                const userRef = database.ref('users/' + user.uid);
+                userRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        balance = data.balance !== undefined ? parseFloat(data.balance) : 50.00;
+                        todayEarnings = data.todayEarnings !== undefined ? parseFloat(data.todayEarnings) : 12.50;
+                        yesterdayEarnings = data.yesterdayEarnings !== undefined ? parseFloat(data.yesterdayEarnings) : 24.50;
+                        articleCount = data.articleCount !== undefined ? parseInt(data.articleCount) : 0;
+                        articleBlockedUntil = data.articleBlockedUntil !== undefined ? parseInt(data.articleBlockedUntil) : 0;
+                        userSubmissions = data.userSubmissions !== undefined ? parseInt(data.userSubmissions) : 0;
+                        lastSpinTime = data.lastSpinTime !== undefined ? parseInt(data.lastSpinTime) : 0;
+                        lastBonusClaim = data.lastBonusClaim !== undefined ? parseInt(data.lastBonusClaim) : 0;
+                    } else {
+                        userRef.set({
+                            name: user.displayName || "ইউজার",
+                            email: user.email,
+                            balance: 50.00,
+                            todayEarnings: 12.50,
+                            yesterdayEarnings: 24.50,
+                            articleCount: 0,
+                            articleBlockedUntil: 0,
+                            userSubmissions: 0,
+                            lastSpinTime: 0,
+                            lastBonusClaim: 0
+                        });
+                    }
+                    updateBalanceUI();
+                    updateSubmissionFormUI();
+                    checkArticleStatus();
+                    checkSpinStatus();
+                    setupBonusTimer(lastBonusClaim);
+                    renderMyWithdrawals();
+                });
+
+            } else {
+                document.getElementById('auth-overlay').style.display = 'flex';
+            }
+        });
+
+        // Auth Tabs switching
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+
+            if (tab === 'login') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                tabLogin.classList.add('active');
+                tabRegister.classList.remove('active');
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                tabLogin.classList.remove('active');
+                tabRegister.classList.add('active');
+            }
+        }
+
+        // ইমেইল রেজিস্টার
+        function handleEmailRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    return user.updateProfile({
+                        displayName: name
+                    }).then(() => {
+                        alert("আপনার অ্যাকাউন্ট তৈরি সম্পূর্ণ হয়েছে!");
+                    });
+                })
+                .catch((error) => {
+                    alert("রেজিস্ট্রেশনে ত্রুটি: " + error.message);
+                });
+        }
+
+        // ইমেইল লগইন
+        function handleEmailLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    alert("লগইন সফল হয়েছে!");
+                })
+                .catch((error) => {
+                    alert("লগইনে ত্রুটি: " + error.message);
+                });
+        }
+
+        // গুগল সাইন-ইন
+        function handleGoogleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then(() => {
+                    alert("গুগল লগইন সফল হয়েছে!");
+                })
+                .catch((error) => {
+                    alert("লগইনে ত্রুটি: " + error.message);
+                });
+        }
+
+        // লগআউট
+        function handleLogout() {
+            if (confirm("আপনি কি নিশ্চিতভাবে লগআউট করতে চান?")) {
+                auth.signOut().then(() => {
+                    alert("লগআউট সফল হয়েছে!");
+                });
+            }
+        }
+
+        // ক্লাউড রাইটিং গ্লোবাল হেল্পার
+        function updateFirebaseUserData(updates) {
+            const user = auth.currentUser;
+            if (user) {
+                database.ref('users/' + user.uid).update(updates);
+            }
+        }
+
+        // ================= ২. আর্টিকেল এবং গেম ডেটা =================
+        const defaultArticles = [
+            {
+                id: "art_1",
+                title: "ইউটিউব থেকে মোবাইল দিয়ে সহজে আয়ের সম্পূর্ণ গাইড ২০২৬",
+                body: "ইউটিউব থেকে আয় করার জন্য বর্তমানে শর্টস ভিডিও একটি দুর্দান্ত মাধ্যম হয়ে দাঁড়িয়েছে। আপনার যদি একটি স্মার্টফোন থাকে, তবে খুব সহজেই ইনফরমেটিভ বা এন্টারটেইনিং ১ মিনিটের শর্টস তৈরি করে আপনি মনিটাইজেশন পেতে পারেন। এছাড়া রেগুলার লং ভিডিওর মাধ্যমে ভালো কন্টেন্ট তৈরি করলে গুগলের এডসেন্স থেকে প্রতি মাসে আকর্ষণীয় ডলার রেভিনিউ জেনারেট করা সম্ভব। এর জন্য প্রধান চাবিকাঠি হলো এসইও এবং ট্রেন্ডিং টপিকের সঠিক ব্যবহার।",
+                thumbnail: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500&auto=format&fit=crop&q=60",
+                author: "TakaNow Team",
+                reward: 3.00,
+                views: "১.৮K",
+                uploadTime: "২ ঘণ্টা আগে"
+            },
+            {
+                id: "art_2",
+                title: "এআই (AI) টুলস ব্যবহার করে ঘরে বসে কনটেন্ট রাইটিং শিখে আয়",
+                body: "কৃত্রিম বুদ্ধিমত্তা বা AI বর্তমানে সব ক্ষেত্রে এক অনন্য বিপ্লভ ঘটিয়েছে। চ্যাটজিপিটি বা জেমিনির মতো এআই টুল ব্যবহার করে দ্রুত এবং নির্ভুল আর্টিকেল বা ব্লগ পোস্ট তৈরি করা যায়। আপনি যদি এই এআই টুলগুলো প্রফেশনাল উপায়ে চালনা করতে শিখতে পারেন, তবে ফ্রিল্যান্সিং মার্কেটপ্লেসে ইন্টারন্যাশনাল ক্লায়েন্টদের জন্য কন্টেন্ট রাইটিং সার্ভিস দিয়ে প্রতি মাসে ভালো টাকা উপার্জন করতে পারবেন। এটি ২০২৬ সালের অন্যতম সেরা হাই-ডিমান্ডিং পেশা।",
+                thumbnail: "https://images.unsplash.com/photo-1677442136019-21780efad99a?w=500&auto=format&fit=crop&q=60",
+                author: "TakaNow Team",
+                reward: 3.00,
+                views: "৯৫০",
+                uploadTime: "৫ ঘণ্টা আগে"
+            },
+            {
+                id: "art_3",
+                title: "ওয়েবসাইট এসইও (SEO) করে গুগল এডসেন্স থেকে মাসিক ২০ হাজার টাকা আয়",
+                body: "একটি নিজের ব্লগ বা ওয়েবসাইট তৈরি করে সেটিতে গুগল এডসেন্স এর বিজ্ঞাপন দেখিয়ে ইনকাম করার প্রধান চাবিকাঠি হলো এসইও (SEO)। সার্চ ইঞ্জিন অপটিমাইজেশন ব্যবহারের মাধ্যমে গুগলের প্রথম পাতায় আপনার আর্টিকেল নিয়ে আসতে পারলে প্রচুর অর্গানিক বা ফ্রি ভিজিটর পাওয়া যায়। যত বেশি ভিজিটর আপনার সাইটে আসবে, বিজ্ঞাপনে ক্লিকে আপনার সিপিসি (CPC) রেট অনুযায়ী তত বেশি রেভিনিউ জেনারেট হবে।",
+                thumbnail: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&auto=format&fit=crop&q=60",
+                author: "TakaNow Team",
+                reward: 3.00,
+                views: "৩.২K",
+                uploadTime: "১ দিন আগে"
+            }
+        ];
+
+        let articlesList = JSON.parse(localStorage.getItem('takanow_articles_list')) || defaultArticles;
+
+        // থিম লোড
+        const activeTheme = localStorage.getItem('takanow_theme') || 'dark';
+        if (activeTheme === 'light') {
+            document.body.classList.add('light-mode');
+            document.getElementById('theme-toggle-checkbox').checked = true;
+        }
+
+        generateQuiz();
+        startPayoutTicker();
+        renderArticlesFeed();
+        
+        if (articleStatusInterval) clearInterval(articleStatusInterval);
+        articleStatusInterval = setInterval(checkArticleStatus, 1000);
+
+        function toggleTheme() {
+            const checkbox = document.getElementById('theme-toggle-checkbox');
+            if (checkbox.checked) {
+                document.body.classList.add('light-mode');
+                localStorage.setItem('takanow_theme', 'light');
+            } else {
+                document.body.classList.remove('light-mode');
+                localStorage.setItem('takanow_theme', 'dark');
+            }
+        }
+
+        function updateBalanceUI() {
+            const balanceSpans = document.querySelectorAll('#user-balance');
+            balanceSpans.forEach(span => {
+                span.innerText = balance.toFixed(2);
+            });
+            document.getElementById('balance-today').innerText = todayEarnings.toFixed(2);
+            document.getElementById('balance-yesterday').innerText = yesterdayEarnings.toFixed(2);
+        }
+
+        function openFeatureModal(modalId) {
+            document.getElementById('modal-overlay').classList.add('active');
+            document.getElementById(modalId).classList.add('active');
+            
+            if (modalId === 'modal-spin') {
+                checkSpinStatus();
+                if (spinTimerInterval) clearInterval(spinTimerInterval);
+                spinTimerInterval = setInterval(checkSpinStatus, 1000);
+            }
+        }
+
+        function closeAllModals() {
+            document.getElementById('modal-overlay').classList.remove('active');
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => modal.classList.remove('active'));
+            if (spinTimerInterval) clearInterval(spinTimerInterval);
+            if (adTimerInterval) clearInterval(adTimerInterval);
+        }
+
+        // পেমেন্ট প্রুফ স্ক্রলিং
+        function startPayoutTicker() {
+            const listContainer = document.getElementById('live-payouts-list');
+            const ticker = document.getElementById('payout-ticker');
+            
+            const firstNames = ["Arif", "Rony", "Sabiha", "Tarek", "Farhana", "Hasan", "Sumaiya", "Rakib", "Nahid", "Mim", "Shakil", "Anika", "Sajid", "Rupa", "Zihad", "Mitu", "Tamim", "Sujon"];
+            const methods = ["Bkash", "Nagad"];
+            const amounts = [100, 150, 180, 200, 250, 300, 350, 400, 500];
+
+            for(let i=0; i<3; i++) {
+                addNewPayoutCard();
+            }
+
+            function addNewPayoutCard() {
+                const randomName = firstNames[Math.floor(Math.random() * firstNames.length)] + "***";
+                const randomMethod = methods[Math.floor(Math.random() * methods.length)];
+                const randomAmount = amounts[Math.floor(Math.random() * amounts.length)];
+                
+                if (ticker) {
+                    ticker.innerText = `সফল পেমেন্ট: ${randomName} ${randomMethod}-এর মাধ্যমে ৳ ${randomAmount}.00 তুলেছেন!`;
+                }
+
+                const payoutCard = document.createElement('div');
+                payoutCard.className = 'payout-item';
+                
+                let badgeStyle = randomMethod === "Bkash" ? `background-color: rgba(226, 18, 93, 0.12); color: #e2125d;` : `background-color: rgba(245, 124, 0, 0.12); color: #f57c00;`;
+
+                payoutCard.innerHTML = `
+                    <div class="payout-item-left">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <div>
+                            <div class="payout-item-name">${randomName} <span style="font-size: 10px; padding: 2px 7px; border-radius: 12px; font-weight: bold; ${badgeStyle}">${randomMethod}</span></div>
+                            <div class="payout-item-time">এইমাত্র করা হয়েছে</div>
+                        </div>
+                    </div>
+                    <div class="payout-item-right">
+                        <div class="payout-item-amount">৳ ${randomAmount}.00</div>
+                        <div class="payout-item-status">সফল (Success)</div>
+                    </div>
+                `;
+
+                if (listContainer) {
+                    listContainer.insertBefore(payoutCard, listContainer.firstChild);
+                    if (listContainer.children.length > 3) {
+                        listContainer.removeChild(listContainer.lastChild);
+                    }
+                }
+            }
+
+            function scheduleFakePayouts() {
+                setTimeout(() => {
+                    addNewPayoutCard();
+                    scheduleFakePayouts();
+                }, Math.floor(Math.random() * 8000) + 4000);
+            }
+            scheduleFakePayouts();
+        }
+
+        function generateQuiz() {
+            currentNum1 = Math.floor(Math.random() * 10) + 1;
+            currentNum2 = Math.floor(Math.random() * 10) + 1;
+            correctAnswer = currentNum1 + currentNum2;
+            document.getElementById('quiz-question').innerText = `${currentNum1} + ${currentNum2} = ?`;
+            document.getElementById('quiz-answer').value = "";
+        }
+
+        function submitQuiz() {
+            const userAnswer = parseInt(document.getElementById('quiz-answer').value);
+            if (isNaN(userAnswer)) {
+                alert("দয়া করে সঠিক সংখ্যা লিখুন!");
+                return;
+            }
+
+            if (userAnswer === correctAnswer) {
+                const quizReward = 0.50;
+                balance += quizReward;
+                todayEarnings += quizReward;
+                
+                updateFirebaseUserData({
+                    balance: balance,
+                    todayEarnings: todayEarnings
+                });
+                
+                alert(`সঠিক উত্তর! আপনার ব্যালেন্সে ৳ ${quizReward.toFixed(2)} যোগ করা হয়েছে।`);
+                generateQuiz();
+                closeAllModals();
+            } else {
+                alert("ভুল উত্তর! আবার চেষ্টা করুন।");
+                generateQuiz();
+            }
+        }
+
+        function scratchCard() {
+            if (isScratched) return;
+            isScratched = true;
+
+            const rewards = [0.20, 0.40, 0.60, 0.80, 1.00, 1.20, 1.50];
+            const reward = rewards[Math.floor(Math.random() * rewards.length)];
+            
+            document.getElementById('scratch-amount').innerText = reward.toFixed(2);
+            document.getElementById('scratch-layer').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('scratch-layer').style.pointerEvents = 'none';
+                balance += reward;
+                todayEarnings += reward;
+                
+                updateFirebaseUserData({
+                    balance: balance,
+                    todayEarnings: todayEarnings
+                });
+                
+                alert(`অভিনন্দন! আপনি স্ক্র্যাচ কার্ড ঘষে ৳ ${reward.toFixed(2)} টাকা জিতেছেন!`);
+                
+                setTimeout(() => {
+                    document.getElementById('scratch-layer').style.opacity = '1';
+                    document.getElementById('scratch-layer').style.pointerEvents = 'auto';
+                    document.getElementById('scratch-amount').innerText = "0.00";
+                    isScratched = false;
+                    closeAllModals();
+                }, 1000);
+            }, 500);
+        }
+
+        function renderArticlesFeed() {
+            const feedContainer = document.getElementById('articles-feed');
+            if(!feedContainer) return;
+            let html = '';
+
+            articlesList.forEach(art => {
+                html += `
+                    <div class="article-card">
+                        <div class="article-thumb-container">
+                            <img src="${art.thumbnail}" class="article-thumb" alt="Thumbnail" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60'">
+                            <span class="article-views-badge"><i class="fa-regular fa-eye"></i> ${art.views || "0"}</span>
+                        </div>
+                        <div class="article-card-body">
+                            <h4>${art.title}</h4>
+                            <div class="article-meta">
+                                <i class="fa-regular fa-clock"></i> <span>${art.uploadTime || "এইমাত্র"}</span>
+                            </div>
+                            <p>${art.body.substring(0, 110)}...</p>
+                            <div class="article-card-footer">
+                                <span class="reward">৳ ${art.reward.toFixed(2)} রিওয়ার্ড</span>
+                                <button class="read-btn" id="btn_${art.id}" onclick="openSpecificArticle('${art.id}')">আর্টিকেল পড়ুন</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            feedContainer.innerHTML = html;
+        }
+
+        function checkArticleStatus() {
+            const now = Date.now();
+            const articleDesc = document.getElementById('article-desc');
+            const allReadBtns = document.querySelectorAll('.read-btn');
+
+            if (now < articleBlockedUntil) {
+                const remaining = articleBlockedUntil - now;
+                const minutes = Math.floor((remaining % 3600000) / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+
+                if(articleDesc) {
+                    articleDesc.innerHTML = `<span style="color: #ef4444; font-weight: bold;">আজকের সীমা অতিক্রম! খুলবে: ${minutes}মিঃ ${seconds}সেঃ পর</span>`;
+                }
+                allReadBtns.forEach(btn => {
+                    btn.disabled = true;
+                    btn.innerText = "লকড (Locked)";
+                    btn.style.background = "#475569";
+                });
+            } else {
+                if(articleDesc) {
+                    articleDesc.innerText = `পুরস্কার: ৳ ৩.০০ | আজ পড়েছেন: ${articleCount}/১০ বার`;
+                }
+                allReadBtns.forEach(btn => {
+                    btn.disabled = false;
+                    btn.innerText = "আর্টিকেল পড়ুন";
+                    btn.style.background = "linear-gradient(135deg, #10b981, #059669)";
+                });
+            }
+        }
+
+        function openSpecificArticle(artId) {
+            const now = Date.now();
+            if (now < articleBlockedUntil) {
+                alert("আপনার আজকের ১০ বারের লিমিট শেষ হয়ে গেছে। অনুগ্রহ করে অপেক্ষা করুন!");
+                return;
+            }
+            
+            const selectedArt = articlesList.find(a => a.id === artId);
+            if (!selectedArt) {
+                alert("আর্টিকেলটি খুঁজে পাওয়া যায়নি!");
+                return;
+            }
+
+            document.getElementById('article-title').innerText = selectedArt.title;
+            document.getElementById('article-body').innerText = selectedArt.body;
+
+            document.getElementById('home-tab').style.display = 'none';
+            document.getElementById('article-section').style.display = 'block';
+            document.getElementById('claim-article-btn').style.display = 'none';
+            document.getElementById('article-timer').style.display = 'block';
+
+            let countdown = 30;
+            document.getElementById('article-timer').innerText = `অপেক্ষা করুন: ${countdown} সেকেন্ড`;
+
+            if (articleTimerInterval) clearInterval(articleTimerInterval);
+
+            articleTimerInterval = setInterval(() => {
+                countdown--;
+                document.getElementById('article-timer').innerText = `অপেক্ষা করুন: ${countdown} সেকেন্ড`;
+
+                if (countdown <= 0) {
+                    clearInterval(articleTimerInterval);
+                    document.getElementById('article-timer').style.display = 'none';
+                    document.getElementById('claim-article-btn').style.display = 'inline-block';
+                }
+            }, 1000);
+        }
+
+        function claimArticleReward() {
+            const reward = 3.00;
+            balance += reward;
+            todayEarnings += reward;
+            articleCount += 1;
+
+            let updates = {
+                balance: balance,
+                todayEarnings: todayEarnings,
+                articleCount: articleCount
+            };
+
+            alert(`অভিনন্দন! আর্টিকেল পড়ার জন্য সফলভাবে ৳ ${reward.toFixed(2)} আপনার ব্যালেন্সে যোগ করা হয়েছে।`);
+
+            if (articleCount >= 10) {
+                const lockTime = Date.now() + 3600000; 
+                updates.articleBlockedUntil = lockTime;
+                updates.articleCount = 0; 
+                alert("আপনার আজকের ১০ বারের আর্টিকেল রিডিংয়ের লিমিট শেষ হয়েছে! আবার ১ ঘণ্টা পর এটি সচল হবে।");
+            }
+
+            updateFirebaseUserData(updates);
+
+            document.getElementById('article-section').style.display = 'none';
+            document.getElementById('home-tab').style.display = 'block';
+        }
+
+        function handleArticleSubmission(e) {
+            e.preventDefault();
+
+            if (userSubmissions >= 2) {
+                alert("দুঃখিত! আপনি ইতিমধ্যে সর্বোচ্চ ২টি আর্টিকেল লিখেছেন এবং আপনার বোনাস নিয়েছেন।");
+                return;
+            }
+
+            const title = document.getElementById('user-art-title').value.trim();
+            const thumb = document.getElementById('user-art-thumb').value.trim();
+            const body = document.getElementById('user-art-body').value.trim();
+
+            if (title.length < 10 || body.length < 50) {
+                alert("অনুগ্রহ করে আর্টিকেলের শিরোনাম নূন্যতম ১০টি অক্ষর এবং বর্ণনা নূন্যতম ৫০টি অক্ষরে লিখুন!");
+                return;
+            }
+
+            const newArticle = {
+                id: "user_art_" + Date.now(),
+                title: title,
+                body: body,
+                thumbnail: thumb || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60",
+                author: "User Post",
+                reward: 3.00,
+                views: "০",
+                uploadTime: "এইমাত্র"
+            };
+
+            articlesList.unshift(newArticle);
+            localStorage.setItem('takanow_articles_list', JSON.stringify(articlesList));
+
+            balance += 5.00;
+            todayEarnings += 5.00;
+            userSubmissions += 1;
+
+            updateFirebaseUserData({
+                balance: balance,
+                todayEarnings: todayEarnings,
+                userSubmissions: userSubmissions
+            });
+
+            alert("অভিনন্দন! আপনার আর্টিকেলটি পাবলিশ হয়েছে এবং ৳ ৫.০০ বোনাস ক্লাউডে যোগ করা হয়েছে।");
+            
+            document.getElementById('article-submit-form').reset();
+            renderArticlesFeed();
+            
+            const homeNavItem = document.querySelector(`.bottom-nav .nav-item[data-tab="home-tab"]`);
+            if (homeNavItem) homeNavItem.click();
+        }
+
+        function updateSubmissionFormUI() {
+            const infoBox = document.getElementById('submission-limit-info');
+            const submitForm = document.getElementById('article-submit-form');
+            if(!infoBox || !submitForm) return;
+
+            if (userSubmissions >= 2) {
+                infoBox.innerHTML = `
+                    <h3 style="margin-bottom: 5px; color:#ef4444;"><i class="fa-solid fa-lock"></i> আর্টিকেল লেখার সীমা শেষ</h3>
+                    <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">আপনি ইতিমধ্যেই ২টি আর্টিকেল লিখে সম্পন্ন করেছেন এবং আপনার মোট ৳ ১০.০০ বোনাস ব্যালেন্সে যুক্ত করা হয়েছে। নতুন করে আর আর্টিকেল লেখা সম্ভব নয়।</p>
+                `;
+                submitForm.style.display = 'none';
+            } else {
+                infoBox.innerHTML = `
+                    <h3 style="margin-bottom: 5px; color:#10b981;"><i class="fa-solid fa-pen-fancy"></i> আর্টিকেল লিখে আয় করুন</h3>
+                    <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">প্রতিটি আর্টিকেল সাবমিট করার জন্য আপনি পাবেন **৳ ৫.০০** সরাসরি বোনাস। আপনি সর্বোচ্চ ২টি আর্টিকেল লিখতে পারবেন। আপনি ইতিমধ্যে <strong>${userSubmissions}/২টি</strong> আর্টিকেল সাবমিট করেছেন।</p>
+                `;
+                submitForm.style.display = 'block';
+            }
+        }
+
+        function checkSpinStatus() {
+            const now = Date.now();
+            const spinBtn = document.getElementById('spin-start-btn');
+            if(!spinBtn) return;
+
+            if (now - lastSpinTime < 86400000) {
+                const remaining = 86400000 - (now - lastSpinTime);
+                const hours = Math.floor(remaining / 3600000);
+                const minutes = Math.floor((remaining % 3600000) / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+
+                spinBtn.disabled = true;
+                spinBtn.innerText = `লকড: ${hours}ঘঃ ${minutes}মিঃ`;
+            } else {
+                spinBtn.disabled = false;
+                spinBtn.innerText = "স্পিন করুন";
+            }
+        }
+
+        function spinAndEarn() {
+            const now = Date.now();
+            if (now - lastSpinTime < 86400000) {
+                alert("আপনি ইতিমধ্যেই আজকের স্পিন খেলে ফেলেছেন! পরবর্তী স্পিনের জন্য ২৪ ঘণ্টা অপেক্ষা করুন।");
+                return;
+            }
+
+            if (isSpinning) return;
+            isSpinning = true;
+
+            const wheel = document.getElementById('spin-wheel');
+            const spinBtn = document.getElementById('spin-start-btn');
+            if(spinBtn) spinBtn.disabled = true;
+
+            const randomDegrees = Math.floor(Math.random() * 3600) + 1800; 
+            if(wheel) wheel.style.transform = `rotate(${randomDegrees}deg)`;
+
+            setTimeout(() => {
+                const rewards = [0.20, 0.50, 0.80, 1.00, 1.50, 2.00];
+                const finalReward = rewards[Math.floor(Math.random() * rewards.length)];
+
+                balance += finalReward;
+                todayEarnings += finalReward;
+                lastSpinTime = Date.now();
+
+                updateFirebaseUserData({
+                    balance: balance,
+                    todayEarnings: todayEarnings,
+                    lastSpinTime: lastSpinTime
+                });
+
+                alert(`চমৎকার! আপনি স্পিন করে ৳ ${finalReward.toFixed(2)} টাকা বোনাস জিতেছেন!`);
+                isSpinning = false;
+                if(wheel) wheel.style.transform = `rotate(0deg)`; 
+                
+                checkSpinStatus();
+                closeAllModals();
+            }, 3000);
+        }
+
+        function copyReferralLink() {
+            const refInput = document.getElementById('referral-link-input');
+            refInput.select();
+            refInput.setSelectionRange(0, 99999); 
+            navigator.clipboard.writeText(refInput.value).then(() => {
+                alert("আপনার রেফারেল লিংক কপি করা হয়েছে!");
+            });
+        }
+
+        // ================= ৩. ADMOB BRIDGE Integration =================
+        function watchAdTask(adName) {
+            currentWatchingAdName = adName;
+
+            // যদি এটি কোনো Android অ্যাপের ভেতর থেকে চলে, তবে এটি সরাসরি জাভা কোড কল করবে
+            if (window.AndroidBridge) {
+                window.AndroidBridge.showRewardedAd();
+            } else {
+                // ব্রাউজারে টেস্ট করার জন্য বা ফ্যালব্যাক হিসেবে সাধারণ পপ-আপ টাইমার চলবে
+                document.getElementById('modal-watch-ad').classList.add('active');
+                document.getElementById('modal-overlay').classList.add('active');
+                document.getElementById('claim-ad-reward-btn').style.display = 'none';
+                document.getElementById('ad-timer').style.display = 'block';
+
+                let countdown = 15;
+                document.getElementById('ad-timer').innerText = `অপেক্ষা করুন: ${countdown} সেকেন্ড`;
+
+                if (adTimerInterval) clearInterval(adTimerInterval);
+
+                adTimerInterval = setInterval(() => {
+                    countdown--;
+                    document.getElementById('ad-timer').innerText = `অপেক্ষা করুন: ${countdown} সেকেন্ড`;
+
+                    if (countdown <= 0) {
+                        clearInterval(adTimerInterval);
+                        document.getElementById('ad-timer').style.display = 'none';
+                        document.getElementById('claim-ad-reward-btn').style.display = 'block';
+                    }
+                }, 1000);
+            }
+        }
+
+        // অ্যান্ড্রয়েড জাভা কোড দ্বারা কলব্যাক হিসেবে স্বয়ংক্রিয়ভাবে এক্সিকিউট হবে
+        function onAdWatchedSuccessfully() {
+            claimAdReward();
+        }
+
+        function claimAdReward() {
+            const reward = 2.00;
+            balance += reward;
+            todayEarnings += reward;
+
+            updateFirebaseUserData({
+                balance: balance,
+                todayEarnings: todayEarnings
+            });
+
+            closeAllModals();
+            alert(`অভিনন্দন! "${currentWatchingAdName}" সফলভাবে দেখার জন্য ৳ ${reward.toFixed(2)} আপনার ক্লাউড ব্যালেন্সে যোগ করা হয়েছে।`);
+        }
+
+        function setupBonusTimer(lastClaimTime) {
+            if (bonusTimerInterval) clearInterval(bonusTimerInterval);
+
+            function updateTimer() {
+                const now = Date.now();
+                const timeDiff = now - lastClaimTime;
+                const canClaim = (timeDiff >= 86400000); 
+
+                const bonusBtn = document.getElementById('claim-bonus-btn');
+                if(!bonusBtn) return;
+
+                if (canClaim) {
+                    bonusBtn.innerText = "৳ ১০.০০ বোনাস নিন";
+                    bonusBtn.disabled = false;
+                    clearInterval(bonusTimerInterval);
+                } else {
+                    const remaining = 86400000 - timeDiff;
+                    const hours = Math.floor(remaining / 3600000);
+                    const minutes = Math.floor((remaining % 3600000) / 60000);
+                    const seconds = Math.floor((remaining % 60000) / 1000);
+
+                    bonusBtn.innerText = `অপেক্ষা করুন: ${hours}ঘণ্টা ${minutes}মিনিট ${seconds}সেকেন্ড`;
+                    bonusBtn.disabled = true;
+                }
+            }
+
+            updateTimer();
+            bonusTimerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // উইথড্র
+        function handleWithdraw(e) {
+            e.preventDefault();
+            const method = document.getElementById('withdraw-method').value;
+            const number = document.getElementById('withdraw-number').value;
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const user = auth.currentUser;
+
+            if (!user) return;
+
+            if (amount > balance) {
+                alert("আপনার ব্যালেন্স পর্যাপ্ত নয়!");
+                return;
+            }
+            if (amount < 100) {
+                alert("নূন্যতম উইথড্র ১০০ টাকা!");
+                return;
+            }
+
+            balance -= amount;
+            
+            database.ref('users/' + user.uid + '/withdrawals').once('value').then((snapshot) => {
+                const myWithdrawals = snapshot.val() || [];
+                myWithdrawals.unshift({
+                    method: method,
+                    number: number,
+                    amount: amount,
+                    status: "পেন্ডিং (Pending)",
+                    date: new Date().toLocaleString('bn-BD')
+                });
+
+                return database.ref('users/' + user.uid).update({
+                    balance: balance,
+                    withdrawals: myWithdrawals
+                });
+            }).then(() => {
+                closeAllModals();
+                alert(`রিকোয়েস্ট সফল হয়েছে! আপনার ৳ ${amount.toFixed(2)} টাকা উইথড্র রিকোয়েস্টটি পেন্ডিং তালিকায় যুক্ত হলো।`);
+                document.getElementById('withdraw-form').reset();
+                renderMyWithdrawals();
+            }).catch((err) => {
+                alert("উইথড্র সম্পন্ন করতে ব্যর্থ: " + err.message);
+            });
+        }
+
+        function renderMyWithdrawals() {
+            const historyContainer = document.getElementById('my-withdrawals-history');
+            const user = auth.currentUser;
+            if (!user || !historyContainer) return;
+
+            database.ref('users/' + user.uid + '/withdrawals').once('value').then((snapshot) => {
+                const withdrawals = snapshot.val() || [];
+                if (withdrawals.length === 0) {
+                    historyContainer.innerHTML = `<p style="font-size: 13px; color: #94a3b8; text-align: center;">কোনো উত্তোলনের তথ্য নেই।</p>`;
+                    return;
+                }
+
+                let html = '';
+                withdrawals.forEach(w => {
+                    html += `
+                        <div style="background-color: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);">
+                            <div>
+                                <p style="font-size: 13px; font-weight: bold; color: #cbd5e1;">${w.method} (${w.number})</p>
+                                <p style="font-size: 10px; color: #64748b;">${w.date}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="font-size: 14px; font-weight: bold; color: #10b981;">৳ ${parseFloat(w.amount).toFixed(2)}</p>
+                                <span style="font-size: 10px; color: #eab308; font-weight: 600;">${w.status}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                historyContainer.innerHTML = html;
+            });
+        }
+
+        function resetDemoData() {
+            if (confirm("আপনি কি নিশ্চিত যে আপনার ক্লাউড ডাটাবেজ ব্যালেন্স ও হিস্টোরি আবার রিসেট করতে চান?")) {
+                const user = auth.currentUser;
+                if (user) {
+                    database.ref('users/' + user.uid).set({
+                        name: user.displayName || "টেস্ট ইউজার",
+                        email: user.email,
+                        balance: 50.00,
+                        todayEarnings: 12.50,
+                        yesterdayEarnings: 24.50,
+                        articleCount: 0,
+                        articleBlockedUntil: 0,
+                        userSubmissions: 0,
+                        lastSpinTime: 0,
+                        lastBonusClaim: 0,
+                        withdrawals: []
+                    }).then(() => {
+                        localStorage.clear();
+                        location.reload();
+                    });
+                }
+            }
+        }
+
+        // ট্যাব সুইচ
+        function switchTab(navElement, headerTitle) {
+            document.getElementById('article-section').style.display = 'none';
+
+            const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+
+            navElement.classList.add('active');
+
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            const targetTab = navElement.getAttribute('data-tab');
+            document.getElementById(targetTab).classList.add('active');
+
+            const mainHeader = document.getElementById('main-header');
+            const liveTicker = document.querySelector('.live-payout-ticker');
+            if (targetTab === 'home-tab') {
+                mainHeader.style.display = 'flex';
+                liveTicker.style.display = 'flex';
+            } else {
+                mainHeader.style.display = 'none';
+                liveTicker.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
